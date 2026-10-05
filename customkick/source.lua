@@ -9,6 +9,10 @@ local tags = {
 	italic = function(s) return `<i>{s}</i>` end,
 }
 
+local function hasTag(msg: string): boolean
+	return msg:match("%a+%((.-)%)") ~= nil
+end
+
 local function parse(msg: string): string
 	return (msg:gsub("(%a+)%((.-)%)", function(tag, content)
 		local fn = tags[tag]
@@ -23,10 +27,14 @@ local function Kick(title: string, message: string)
 	local prompt = gui:FindFirstChild("promptOverlay"):WaitForChild("ErrorPrompt")
 	local titleLabel = prompt:FindFirstChild("TitleFrame"):FindFirstChild("ErrorTitle")
 	local msgFrame = prompt:FindFirstChild("MessageArea"):FindFirstChild("ErrorFrame"):FindFirstChild("ErrorMessage")
-	titleLabel.Text = title
-	msgFrame.RichText = true
-	msgFrame.Text = parse(message)
-	msgFrame.TextSize = 18
+	titleLabel.TextSize = 25
+	msgFrame.TextSize = 20
+	local msgHasTags = hasTag(message)
+	local titleHasTags = hasTag(title)
+	titleLabel.RichText = titleHasTags
+	titleLabel.Text = titleHasTags and parse(title) or title
+	msgFrame.RichText = msgHasTags
+	msgFrame.Text = msgHasTags and parse(message) or message
 end
 
 return {Kick = Kick}
