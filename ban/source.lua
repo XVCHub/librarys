@@ -1,4 +1,4 @@
-local Players = game:GetService("Players")
+local Players = cloneref(game:GetService("Players"))
 local plr = Players.LocalPlayer
 local font = Font.new("rbxasset://fonts/families/ComicNeueAngular.json")
 
@@ -22,7 +22,7 @@ local function parse(text: string): (string, boolean)
 	return out, hasTag
 end
 
-local function label(parent, pos, size, color, text)
+local function newLabel(parent, pos, size, color, text, maxSize)
 	local parsed, hasTag = parse(text)
 	local l = Instance.new("TextLabel")
 	l.Size = size
@@ -35,6 +35,13 @@ local function label(parent, pos, size, color, text)
 	l.RichText = hasTag
 	l.Text = parsed
 	l.Parent = parent
+
+	if maxSize then
+		local c = Instance.new("UITextSizeConstraint")
+		c.MaxTextSize = maxSize
+		c.Parent = l
+	end
+
 	return l
 end
 
@@ -45,6 +52,7 @@ function Module.Ban(BanData: {
 	reason: string?,
 	duration: string?,
 	timeLeft: string?,
+	note: string?,
 	discord: string?,
 	discordText: string?,
 })
@@ -56,7 +64,7 @@ function Module.Ban(BanData: {
 	gui.Name = "BanGui"
 	gui.ResetOnSpawn = false
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-  gui.Parent = gethui() or plr.PlayerGui
+	gui.Parent = gethui()
 
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(0.5, 0, 0.5, 0)
@@ -80,12 +88,16 @@ function Module.Ban(BanData: {
 	titleLabel.RichText = titleHasTag
 	titleLabel.Text = titleParsed
 	titleLabel.Parent = frame
+	local tc = Instance.new("UITextSizeConstraint")
+	tc.MaxTextSize = 28
+	tc.Parent = titleLabel
 
-	label(frame,
+	newLabel(frame,
 		UDim2.new(0, 0, 0.125, 0),
 		UDim2.new(1, 0, 0.4, 0),
 		Color3.new(1, 1, 1),
-		"Reason: " .. (BanData.reason or "N/A")
+		"Reason: " .. (BanData.reason or "N/A"),
+		22
 	)
 
 	local dur = Instance.new("TextLabel")
@@ -98,18 +110,28 @@ function Module.Ban(BanData: {
 	dur.FontFace = font
 	dur.Text = `Your ban duration is <font color="#ff0000">{BanData.duration or "permanent"}.</font>`
 	dur.Parent = frame
+	local dc = Instance.new("UITextSizeConstraint")
+	dc.MaxTextSize = 18
+	dc.Parent = dur
+
+	if BanData.note then
+		newLabel(frame,
+			UDim2.new(0, 0, 0.65, 0),
+			UDim2.new(1, 0, 0.1, 0),
+			Color3.fromRGB(200, 200, 200),
+			BanData.note,
+			14
+		)
+	end
 
 	if BanData.timeLeft then
-		local tl = Instance.new("TextLabel")
-		tl.Size = UDim2.new(1, 0, 0.15, 0)
-		tl.Position = UDim2.new(0, 0, 0.65, 0)
-		tl.BackgroundTransparency = 1
-		tl.TextColor3 = Color3.new(1, 1, 1)
-		tl.TextScaled = true
-		tl.TextWrapped = true
-		tl.FontFace = font
-		tl.Text = `You will automatically be unbanned in\n{BanData.timeLeft}`
-		tl.Parent = frame
+		newLabel(frame,
+			UDim2.new(0, 0, BanData.note and 0.75 or 0.65, 0),
+			UDim2.new(1, 0, 0.15, 0),
+			Color3.new(1, 1, 1),
+			`You will automatically be unbanned in\n{BanData.timeLeft}`,
+			14
+		)
 	end
 
 	if BanData.discord then
@@ -118,12 +140,14 @@ function Module.Ban(BanData: {
 		appeal.Position = UDim2.new(0, 0, 0.9, 0)
 		appeal.BackgroundTransparency = 1
 		appeal.RichText = true
-		appeal.Text = `<u>{BanData.discordText or "Appeal this ban on our Discord server."}</u>`
+		appeal.Text = `Appeal this ban on our <u>Discord Server</u>.`
 		appeal.TextColor3 = Color3.fromRGB(114, 137, 218)
 		appeal.TextScaled = true
 		appeal.FontFace = font
 		appeal.Parent = frame
-
+		local ac = Instance.new("UITextSizeConstraint")
+		ac.MaxTextSize = 14
+		ac.Parent = appeal
 		conns[#conns + 1] = appeal.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				setclipboard(BanData.discord)
@@ -141,7 +165,9 @@ function Module.Ban(BanData: {
 	okay.Style = Enum.ButtonStyle.RobloxButtonDefault
 	okay.FontFace = font
 	okay.Parent = frame
-
+	local oc = Instance.new("UITextSizeConstraint")
+	oc.MaxTextSize = 16
+	oc.Parent = okay
 	conns[#conns + 1] = okay.MouseButton1Click:Connect(function()
 		for _, c in conns do c:Disconnect() end
 		table.clear(conns)
