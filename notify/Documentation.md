@@ -5,7 +5,7 @@ A lightweight notification library.
 ## Usage
 
 ```lua
-local notify = loadstring(game:HttpGet("https://raw.githubusercontent.com/.../source.lua"))()
+local notify = loadstring(game:HttpGet("https://raw.githubusercontent.com/XVCHub/librarys/main/notify/source.lua"))()
 
 notify("Title", "Content")
 ```
